@@ -1,0 +1,27 @@
+/**
+ * CommandCanvas - Explanation Panel Styles
+ *
+ * Styles for the explanation text display panel at the bottom of the app.
+ * Uses monospace font with muted text color and smooth fade-in transitions.
+ */
+
+/* ============================================================
+   Explanation Text
+   ============================================================ */
+
+.ep-text {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-small);
+  color: var(--color-fg-muted);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  max-width: 100%;
+}
+
+.ep-text--visible {
+  opacity: 1;
+}

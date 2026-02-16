@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "name": "Minimal Idle",
+    "author": "CommandCanvas",
+    "frameDelayMs": 500
+  },
+  "frames": [
+    [
+      "  _  "
+    ],
+    [
+      "     "
+    ],
+    [
+      "  _  "
+    ]
+  ]
+}

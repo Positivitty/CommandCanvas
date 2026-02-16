@@ -1,0 +1,230 @@
+/**
+ * Warning Overlay Styles
+ *
+ * Styles for the risky command warning modal overlay.
+ * Uses Catppuccin Mocha palette via CSS custom properties from main.css.
+ * Color-coded risk level badges: critical (red), high (peach), medium (yellow), low (blue).
+ *
+ * Imported by warning-overlay.ts (Vite CSS handling).
+ */
+
+/* ============================================================
+   Backdrop
+   ============================================================ */
+
+.warning-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  animation: warning-fade-in 200ms ease forwards;
+}
+
+/* ============================================================
+   Modal Card
+   ============================================================ */
+
+.warning-modal {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: var(--spacing-xl);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: warning-slide-in 200ms ease forwards;
+}
+
+/* ============================================================
+   Header (icon + title)
+   ============================================================ */
+
+.warning-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.warning-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.warning-title {
+  font-family: var(--font-family-ui);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+/* ============================================================
+   Risk Level Badge
+   ============================================================ */
+
+.warning-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-md);
+}
+
+.warning-badge--critical {
+  background-color: rgba(243, 139, 168, 0.15);
+  color: #f38ba8;
+  border: 1px solid rgba(243, 139, 168, 0.3);
+}
+
+.warning-badge--high {
+  background-color: rgba(250, 179, 135, 0.15);
+  color: #fab387;
+  border: 1px solid rgba(250, 179, 135, 0.3);
+}
+
+.warning-badge--medium {
+  background-color: rgba(249, 226, 175, 0.15);
+  color: #f9e2af;
+  border: 1px solid rgba(249, 226, 175, 0.3);
+}
+
+.warning-badge--low {
+  background-color: rgba(137, 180, 250, 0.15);
+  color: #89b4fa;
+  border: 1px solid rgba(137, 180, 250, 0.3);
+}
+
+/* ============================================================
+   Command Display
+   ============================================================ */
+
+.warning-command {
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-small);
+  color: var(--color-fg);
+  word-break: break-all;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.warning-command-label {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+  color: var(--color-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-xs);
+  display: block;
+}
+
+/* ============================================================
+   Description & Recommendation
+   ============================================================ */
+
+.warning-description {
+  font-size: var(--font-size-base);
+  color: var(--color-fg);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-md);
+}
+
+.warning-recommendation {
+  font-size: var(--font-size-small);
+  color: var(--color-fg-muted);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-xl);
+  padding-left: var(--spacing-md);
+  border-left: 2px solid var(--color-border);
+}
+
+/* ============================================================
+   Button Row
+   ============================================================ */
+
+.warning-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+.warning-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  outline: none;
+}
+
+.warning-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Cancel button (primary/safe action) */
+.warning-btn--cancel {
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+  border-color: var(--color-accent);
+}
+
+.warning-btn--cancel:hover {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+/* Execute Anyway button (dangerous action) */
+.warning-btn--execute {
+  background-color: transparent;
+  color: var(--color-fg-muted);
+  border-color: var(--color-border);
+}
+
+.warning-btn--execute:hover {
+  background-color: rgba(243, 139, 168, 0.1);
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
+@keyframes warning-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes warning-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

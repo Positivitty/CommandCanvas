@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "name": "Minimal Success",
+    "author": "CommandCanvas",
+    "frameDelayMs": 200
+  },
+  "frames": [
+    [
+      "       "
+    ],
+    [
+      "     / "
+    ],
+    [
+      "  \\ /  "
+    ],
+    [
+      "   v   "
+    ]
+  ]
+}

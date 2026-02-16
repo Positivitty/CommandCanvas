@@ -1,0 +1,275 @@
+/**
+ * CommandCanvas - Global Styles
+ *
+ * CSS custom properties for theming, grid layout for all panels.
+ * Dark theme using Catppuccin Mocha palette.
+ *
+ * Layout:
+ *   Row 1: Animation area (full width, configurable height ~120px)
+ *   Row 2: Command panel (left, ~220px) + Terminal output (right, flex)
+ *   Row 3: Explanation panel (full width, ~60px)
+ */
+
+/* ============================================================
+   CSS Custom Properties (Theme Variables)
+   ============================================================ */
+
+:root {
+  /* Base colors (Catppuccin Mocha) */
+  --color-base: #1e1e2e;
+  --color-mantle: #181825;
+  --color-crust: #11111b;
+  --color-surface0: #313244;
+  --color-surface1: #45475a;
+  --color-surface2: #585b70;
+  --color-overlay0: #6c7086;
+  --color-overlay1: #7f849c;
+  --color-overlay2: #9399b2;
+
+  /* Text colors */
+  --color-text: #cdd6f4;
+  --color-subtext0: #a6adc8;
+  --color-subtext1: #bac2de;
+
+  /* Accent colors */
+  --color-red: #f38ba8;
+  --color-green: #a6e3a1;
+  --color-yellow: #f9e2af;
+  --color-blue: #89b4fa;
+  --color-magenta: #f5c2e7;
+  --color-cyan: #94e2d5;
+  --color-peach: #fab387;
+  --color-mauve: #cba6f7;
+  --color-rosewater: #f5e0dc;
+
+  /* Semantic colors */
+  --color-bg: var(--color-base);
+  --color-bg-secondary: var(--color-mantle);
+  --color-bg-tertiary: var(--color-crust);
+  --color-fg: var(--color-text);
+  --color-fg-muted: var(--color-subtext0);
+  --color-border: var(--color-surface0);
+  --color-border-hover: var(--color-surface2);
+  --color-accent: var(--color-blue);
+  --color-accent-hover: var(--color-mauve);
+  --color-success: var(--color-green);
+  --color-warning: var(--color-yellow);
+  --color-error: var(--color-red);
+
+  /* Layout dimensions */
+  --animation-area-height: 120px;
+  --command-panel-width: 220px;
+  --explanation-panel-height: 60px;
+
+  /* Typography */
+  --font-family-mono: 'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+  --font-family-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-size-base: 14px;
+  --font-size-small: 12px;
+  --font-size-xs: 11px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Transitions */
+  --transition-fast: 100ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* Z-index layers */
+  --z-base: 1;
+  --z-panel: 10;
+  --z-overlay: 100;
+  --z-modal: 200;
+}
+
+/* ============================================================
+   Reset & Base Styles
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   App Grid Layout
+   ============================================================ */
+
+#app {
+  display: grid;
+  grid-template-rows: var(--animation-area-height) 1fr var(--explanation-panel-height);
+  grid-template-columns: 1fr;
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Row 1: Animation Area */
+#animation-area {
+  grid-row: 1;
+  grid-column: 1;
+  width: 100%;
+  height: var(--animation-area-height);
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Row 2: Main Area (Command Panel + Terminal) */
+#main-area {
+  grid-row: 2;
+  grid-column: 1;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: 0; /* Allow flex children to shrink below content size */
+  overflow: hidden;
+}
+
+#command-panel {
+  width: var(--command-panel-width);
+  min-width: var(--command-panel-width);
+  max-width: var(--command-panel-width);
+  height: 100%;
+  background-color: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#terminal-output {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background-color: var(--color-bg);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Row 3: Explanation Panel */
+#explanation-panel {
+  grid-row: 3;
+  grid-column: 1;
+  width: 100%;
+  height: var(--explanation-panel-height);
+  background-color: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-lg);
+  overflow: hidden;
+  font-size: var(--font-size-small);
+  color: var(--color-fg-muted);
+}
+
+/* ============================================================
+   Overlay Styles
+   ============================================================ */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-overlay);
+  transition: opacity var(--transition-normal);
+}
+
+.overlay.hidden {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Scrollbar Styles
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-surface2);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-overlay0);
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+
+.hidden {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================================
+   Selection Styles
+   ============================================================ */
+
+::selection {
+  background-color: var(--color-surface2);
+  color: var(--color-fg);
+}
+
+/* === WARNING OVERLAY STYLES (Warning Engine Agent) === */

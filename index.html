@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:*; font-src 'self';" />
+  <title>CommandCanvas</title>
+  <link rel="stylesheet" href="./src/renderer/styles/main.css" />
+  <link rel="stylesheet" href="./src/renderer/styles/terminal.css" />
+  <link rel="stylesheet" href="./src/renderer/styles/command-panel.css" />
+  <link rel="stylesheet" href="./src/renderer/styles/animation.css" />
+  <link rel="stylesheet" href="./src/renderer/styles/explanation.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Row 1: ASCII Animation Area (full width) -->
+    <div id="animation-area"></div>
+
+    <!-- Row 2: Command Panel (left) + Terminal Output (right) -->
+    <div id="main-area">
+      <div id="command-panel"></div>
+      <div id="terminal-output"></div>
+    </div>
+
+    <!-- Row 3: Explanation Panel (full width) -->
+    <div id="explanation-panel"></div>
+
+    <!-- Overlays (positioned absolute, hidden by default) -->
+    <div id="warning-overlay" class="overlay hidden"></div>
+    <div id="custom-command-modal" class="overlay hidden"></div>
+  </div>
+  <script type="module" src="./src/renderer/index.ts"></script>
+</body>
+</html>

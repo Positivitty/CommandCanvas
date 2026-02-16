@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+.vite/
+
+# Electron Forge output
+out/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# App data
+.commandcanvas/
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+
+# Lock files (optional - uncomment to track)
+# package-lock.json
