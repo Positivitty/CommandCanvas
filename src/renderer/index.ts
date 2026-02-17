@@ -51,9 +51,9 @@ const DEFAULT_CONFIG: AppConfig = {
     customRules: [],
   },
   ui: {
-    commandPanelWidth: 220,
-    animationAreaHeight: 220,
-    explanationPanelHeight: 60,
+    commandPanelWidth: 200,
+    animationAreaHeight: 420,
+    explanationPanelHeight: 48,
     terminalFontSize: 14,
     terminalFontFamily: 'monospace',
     terminalTheme: {
@@ -221,9 +221,19 @@ async function initialize(): Promise<void> {
  */
 function applyLayoutConfig(config: AppConfig): void {
   const root = document.documentElement;
-  root.style.setProperty('--animation-area-height', `${config.ui.animationAreaHeight}px`);
-  root.style.setProperty('--command-panel-width', `${config.ui.commandPanelWidth}px`);
-  root.style.setProperty('--explanation-panel-height', `${config.ui.explanationPanelHeight}px`);
+  const ui = config.ui;
+
+  // Validate and clamp layout values before applying as CSS
+  const animH = Number.isFinite(ui.animationAreaHeight) && ui.animationAreaHeight > 0
+    ? ui.animationAreaHeight : 420;
+  const cmdW = Number.isFinite(ui.commandPanelWidth) && ui.commandPanelWidth > 0
+    ? ui.commandPanelWidth : 200;
+  const expH = Number.isFinite(ui.explanationPanelHeight) && ui.explanationPanelHeight > 0
+    ? ui.explanationPanelHeight : 48;
+
+  root.style.setProperty('--animation-area-height', `${animH}px`);
+  root.style.setProperty('--command-panel-width', `${cmdW}px`);
+  root.style.setProperty('--explanation-panel-height', `${expH}px`);
 }
 
 // Wait for DOM to be ready before initializing

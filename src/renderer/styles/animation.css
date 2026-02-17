@@ -1,21 +1,24 @@
 /**
- * CommandCanvas - Animation Area Styles
+ * Oblivion Engine - Animation Area Styles
  *
- * Styles for the ASCII animation container (#animation-area).
- * Uses monospace font for ASCII art rendering with centered alignment.
- * Supports state-based color transitions and enable/disable toggling.
+ * Hero section for ASCII art — the visual centerpiece.
+ * Uses radial gradient background, subtle glow effects,
+ * and state-based color transitions for a cinematic feel.
  */
 
 /* ============================================================
-   Animation Area Container
+   Animation Area Container — Cosmic Hero
    ============================================================ */
 
 #animation-area {
   font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
-  font-size: var(--font-size-small);
-  line-height: 1.2;
-  height: var(--animation-area-height);
-  background-color: var(--color-crust);
+  font-size: 10px;
+  line-height: 1.1;
+  letter-spacing: 0.3px;
+  min-height: var(--animation-area-height);
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(137, 180, 250, 0.03) 0%, transparent 70%),
+    var(--color-crust);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,6 +26,22 @@
   user-select: none;
   position: relative;
   transition: opacity var(--transition-slow);
+}
+
+/* Subtle top vignette */
+#animation-area::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(17, 17, 27, 0.4) 0%,
+    transparent 20%,
+    transparent 80%,
+    rgba(17, 17, 27, 0.6) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
 #animation-area.animation-disabled {
@@ -38,30 +57,55 @@
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
+  letter-spacing: inherit;
   text-align: center;
   color: var(--color-subtext0);
-  transition: color var(--transition-normal), opacity var(--transition-normal);
+  transition: color 0.4s ease, opacity var(--transition-normal), text-shadow 0.4s ease;
   opacity: 1;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.05);
+  padding: var(--spacing-lg) 0;
 }
 
 /* ============================================================
-   Animation State Colors
+   Animation State Colors with Glow
    ============================================================ */
 
 #animation-area.animation-state-idle .animation-frame {
-  color: var(--color-subtext0);
+  color: var(--color-overlay1);
+  text-shadow: 0 0 12px rgba(137, 180, 250, 0.06);
 }
 
 #animation-area.animation-state-running .animation-frame {
-  color: var(--color-overlay1);
+  color: var(--color-subtext1);
+  text-shadow: 0 0 15px rgba(137, 180, 250, 0.1);
 }
 
 #animation-area.animation-state-success .animation-frame {
   color: var(--color-green);
+  text-shadow: 0 0 20px rgba(166, 227, 161, 0.2);
 }
 
 #animation-area.animation-state-error .animation-frame {
   color: var(--color-red);
+  text-shadow: 0 0 20px rgba(243, 139, 168, 0.2);
+}
+
+/* ============================================================
+   State-based Background Shifts
+   ============================================================ */
+
+#animation-area.animation-state-success {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(166, 227, 161, 0.04) 0%, transparent 60%),
+    var(--color-crust);
+}
+
+#animation-area.animation-state-error {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(243, 139, 168, 0.04) 0%, transparent 60%),
+    var(--color-crust);
 }
 
 /* ============================================================

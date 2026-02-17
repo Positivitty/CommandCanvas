@@ -57,9 +57,9 @@
   --color-error: var(--color-red);
 
   /* Layout dimensions */
-  --animation-area-height: 220px;
-  --command-panel-width: 220px;
-  --explanation-panel-height: 60px;
+  --animation-area-height: 420px;
+  --command-panel-width: 200px;
+  --explanation-panel-height: 48px;
 
   /* Typography */
   --font-family-mono: 'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
@@ -132,19 +132,13 @@ body {
   overflow: hidden;
 }
 
-/* Row 1: Animation Area */
+/* Row 1: Animation Area — Hero Section */
+/* Visual styling (background, display, flex, overflow) lives in animation.css */
 #animation-area {
   grid-row: 1;
   grid-column: 1;
   width: 100%;
-  height: var(--animation-area-height);
-  background-color: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  user-select: none;
 }
 
 /* Row 2: Main Area (Command Panel + Terminal) */
@@ -180,19 +174,19 @@ body {
   position: relative;
 }
 
-/* Row 3: Explanation Panel */
+/* Row 3: Explanation Panel — Status Bar */
 #explanation-panel {
   grid-row: 3;
   grid-column: 1;
   width: 100%;
   height: var(--explanation-panel-height);
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-bg-tertiary);
   border-top: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   padding: 0 var(--spacing-lg);
   overflow: hidden;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-xs);
   color: var(--color-fg-muted);
 }
 

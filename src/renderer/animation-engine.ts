@@ -59,6 +59,15 @@ let transitionTimeout: ReturnType<typeof setTimeout> | null = null;
 /** Flag to track whether init has been called */
 let initialized = false;
 
+/** Epoch counter to invalidate stale transition timeouts after rapid state changes */
+let stateEpoch = 0;
+
+/** Epoch counter to invalidate stale theme load responses */
+let themeLoadEpoch = 0;
+
+/** Minimum frame delay to prevent runaway frame advances from bad data */
+const MIN_FRAME_DELAY_MS = 16;
+
 // ============================================================
 // Public API
 // ============================================================
@@ -106,8 +115,11 @@ export function setState(state: AnimationState): void {
     return;
   }
 
-  const previousState = currentState;
   currentState = state;
+
+  // Increment epoch so any pending transition timeout becomes stale
+  stateEpoch++;
+  const epochAtSchedule = stateEpoch;
 
   // Clear any pending transition timeout
   clearTransitionTimeout();
@@ -128,11 +140,15 @@ export function setState(state: AnimationState): void {
     startPlaybackLoop();
   }
 
-  // For success and error states, schedule automatic return to idle
+  // For success and error states, schedule automatic return to idle.
+  // The epoch check prevents stale transitions from firing if setState
+  // was called again before the timeout elapsed.
   if (state === 'success' || state === 'error') {
     transitionTimeout = setTimeout(() => {
       transitionTimeout = null;
-      setState('idle');
+      if (stateEpoch === epochAtSchedule) {
+        setState('idle');
+      }
     }, transitionDuration);
   }
 }
@@ -160,13 +176,21 @@ export function setEnabled(flag: boolean): void {
 
   if (enabled) {
     container.classList.remove('animation-disabled');
+    // Restore the animation area grid row height
+    const originalHeight = container.dataset.originalHeight || '420px';
+    document.documentElement.style.setProperty('--animation-area-height', originalHeight);
     // Resume playback if we have theme data
     if (themeData) {
       stopPlaybackLoop();
       startPlaybackLoop();
     }
   } else {
+    // Save original height before collapsing
+    container.dataset.originalHeight =
+      getComputedStyle(document.documentElement).getPropertyValue('--animation-area-height').trim();
     container.classList.add('animation-disabled');
+    // Collapse the grid row so terminal gets the space
+    document.documentElement.style.setProperty('--animation-area-height', '0px');
     stopPlaybackLoop();
   }
 }
@@ -177,6 +201,9 @@ export function setEnabled(flag: boolean): void {
  * Clamps to a reasonable range [0.1, 10.0].
  */
 export function setSpeed(newSpeed: number): void {
+  if (!Number.isFinite(newSpeed)) {
+    return;
+  }
   speed = Math.max(0.1, Math.min(10.0, newSpeed));
 }
 
@@ -200,6 +227,8 @@ export function dispose(): void {
   currentFrameIndex = 0;
   lastFrameTime = 0;
   initialized = false;
+  stateEpoch = 0;
+  themeLoadEpoch = 0;
 }
 
 // ============================================================
@@ -210,15 +239,25 @@ export function dispose(): void {
  * Load theme data from the main process via IPC.
  */
 async function loadTheme(themeName: string): Promise<void> {
+  // Increment epoch so stale IPC responses from earlier loads are discarded
+  themeLoadEpoch++;
+  const epochAtLoad = themeLoadEpoch;
+
   try {
     const data = await (window as any).api.animation.loadTheme(themeName) as AnimationThemeData;
+
+    // Discard stale response if a newer load was initiated while we waited
+    if (epochAtLoad !== themeLoadEpoch) {
+      return;
+    }
 
     if (!data || !data.idle || !data.success || !data.error) {
       console.error('[AnimationEngine] Invalid theme data received for:', themeName);
       return;
     }
 
-    themeData = data;
+    // Validate and sanitize frame data
+    themeData = validateThemeData(data);
 
     // Reset frame index and restart playback with new theme
     currentFrameIndex = 0;
@@ -232,6 +271,31 @@ async function loadTheme(themeName: string): Promise<void> {
   } catch (err) {
     console.error('[AnimationEngine] Failed to load theme:', themeName, err);
   }
+}
+
+/**
+ * Validate and sanitize theme data to ensure frame files have safe values.
+ */
+function validateThemeData(data: AnimationThemeData): AnimationThemeData {
+  const sanitize = (file: AnimationFrameFile, label: string): AnimationFrameFile => {
+    if (!file.meta || typeof file.meta !== 'object') {
+      file.meta = { name: label, author: 'unknown', frameDelayMs: 200 };
+    }
+    // Guard against zero, negative, NaN, or Infinity frameDelayMs
+    if (!Number.isFinite(file.meta.frameDelayMs) || file.meta.frameDelayMs < MIN_FRAME_DELAY_MS) {
+      file.meta.frameDelayMs = Math.max(MIN_FRAME_DELAY_MS, 200);
+    }
+    if (!Array.isArray(file.frames)) {
+      file.frames = [];
+    }
+    return file;
+  };
+
+  return {
+    idle: sanitize(data.idle, 'idle'),
+    success: sanitize(data.success, 'success'),
+    error: sanitize(data.error, 'error'),
+  };
 }
 
 // ============================================================
@@ -276,12 +340,19 @@ function renderCurrentFrame(): void {
     return;
   }
 
-  // Clamp frame index to valid range
-  const frameIndex = currentFrameIndex % frameFile.frames.length;
-  const frame = frameFile.frames[frameIndex];
+  // Defensively clamp frame index to valid range
+  let safeIndex = currentFrameIndex % frameFile.frames.length;
+  if (!Number.isFinite(safeIndex) || safeIndex < 0) {
+    safeIndex = 0;
+    currentFrameIndex = 0;
+  }
 
-  if (frame) {
+  const frame = frameFile.frames[safeIndex];
+
+  if (frame && Array.isArray(frame)) {
     frameElement.textContent = frame.join('\n');
+  } else {
+    frameElement.textContent = '';
   }
 }
 
@@ -312,7 +383,9 @@ function playbackLoop(timestamp: number): void {
   }
 
   // Calculate effective delay (accounting for speed multiplier)
-  const effectiveDelay = frameFile.meta.frameDelayMs / speed;
+  // Floor at MIN_FRAME_DELAY_MS to prevent runaway frame advances from bad data
+  const rawDelay = frameFile.meta.frameDelayMs / speed;
+  const effectiveDelay = Math.max(MIN_FRAME_DELAY_MS, rawDelay);
   const elapsed = timestamp - lastFrameTime;
 
   if (elapsed >= effectiveDelay) {
@@ -468,7 +541,7 @@ function applyConfig(config: {
   if (typeof config.speed === 'number') {
     setSpeed(config.speed);
   }
-  if (typeof config.transitionDuration === 'number') {
+  if (typeof config.transitionDuration === 'number' && config.transitionDuration >= 0) {
     transitionDuration = config.transitionDuration;
   }
   if (typeof config.theme === 'string') {

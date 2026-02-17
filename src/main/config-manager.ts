@@ -113,9 +113,17 @@ export class ConfigManager {
    * Save the full configuration object to disk.
    */
   async save(config: AppConfig): Promise<void> {
+    const previous = this.config;
     this.config = config;
-    await this.writeToDisk();
-    this.logger?.info('Config saved');
+    try {
+      await this.writeToDisk();
+      this.logger?.info('Config saved');
+    } catch (err) {
+      // Roll back in-memory state on write failure
+      this.config = previous;
+      this.logger?.error(`Config save failed, rolled back in-memory state: ${err}`);
+      throw err;
+    }
   }
 
   /**
@@ -155,11 +163,11 @@ export class ConfigManager {
    */
   private async writeToDisk(): Promise<void> {
     await fs.mkdir(this.configDir, { recursive: true });
-    await fs.writeFile(
-      this.configFilePath,
-      JSON.stringify(this.config, null, 2),
-      'utf-8'
-    );
+    // Atomic write: write to temp file then rename (atomic on POSIX)
+    const tmpPath = this.configFilePath + '.tmp';
+    const content = JSON.stringify(this.config, null, 2);
+    await fs.writeFile(tmpPath, content, 'utf-8');
+    await fs.rename(tmpPath, this.configFilePath);
   }
 
   /**

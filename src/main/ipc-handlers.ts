@@ -44,6 +44,12 @@ export function registerAllHandlers(deps: IpcDependencies): void {
   /** Map of held commands waiting for user confirmation/cancellation */
   const pendingCommands = new Map<string, PendingCommand>();
 
+  /** Whether we are inside a multi-byte escape sequence (e.g. arrow keys) */
+  let inEscapeSequence = false;
+
+  /** Maximum line buffer length to prevent OOM from large pastes */
+  const MAX_LINE_BUFFER_LENGTH = 65536;
+
   // ============================================================
   // Helper: Get the focused BrowserWindow's webContents
   // ============================================================
@@ -73,6 +79,11 @@ export function registerAllHandlers(deps: IpcDependencies): void {
 
     // Wire up shell exit -> renderer
     shellManager.onExit((exitCode: number, signal?: number) => {
+      // Clear stale line buffer and pending commands on shell exit
+      lineBuffer = '';
+      inEscapeSequence = false;
+      pendingCommands.clear();
+
       const wc = getWebContents();
       if (wc) {
         wc.send(IPC_CHANNELS.SHELL_EXIT, { exitCode, signal });
@@ -85,7 +96,30 @@ export function registerAllHandlers(deps: IpcDependencies): void {
   ipcMain.on(IPC_CHANNELS.SHELL_WRITE, (_event, payload: { data: string }) => {
     const data = payload.data;
 
+    // If the shell is not running, discard input to prevent
+    // line buffer accumulation during dead-shell state
+    if (!shellManager.isAlive()) {
+      return;
+    }
+
     for (const char of data) {
+      // Detect start of escape sequence (e.g. arrow keys, Home, End)
+      if (char === '\x1b') {
+        inEscapeSequence = true;
+        shellManager.write(char);
+        continue;
+      }
+
+      // Inside an escape sequence — forward without buffering
+      if (inEscapeSequence) {
+        shellManager.write(char);
+        // Escape sequences end with a letter [A-Za-z] or ~
+        if (/[A-Za-z~]/.test(char)) {
+          inEscapeSequence = false;
+        }
+        continue;
+      }
+
       // Handle backspace: remove last character from line buffer
       if (char === '\x7f' || char === '\b') {
         lineBuffer = lineBuffer.slice(0, -1);
@@ -101,8 +135,8 @@ export function registerAllHandlers(deps: IpcDependencies): void {
         continue;
       }
 
-      // Handle Enter (carriage return)
-      if (char === '\r') {
+      // Handle Enter (carriage return or newline from paste)
+      if (char === '\r' || char === '\n') {
         // Extract the accumulated command from the line buffer
         const command = lineBuffer.trim();
         logger.debug(`IPC: ${IPC_CHANNELS.SHELL_WRITE} detected Enter, line buffer: [${command.length} chars]`);
@@ -150,7 +184,9 @@ export function registerAllHandlers(deps: IpcDependencies): void {
       }
 
       // Regular character - append to line buffer and forward to shell
-      lineBuffer += char;
+      if (lineBuffer.length < MAX_LINE_BUFFER_LENGTH) {
+        lineBuffer += char;
+      }
       shellManager.write(char);
     }
   });
@@ -207,6 +243,9 @@ export function registerAllHandlers(deps: IpcDependencies): void {
       // Discard the pending command (do not forward Enter)
       pendingCommands.delete(payload.warningId);
       lineBuffer = '';
+
+      // Clear the cancelled command text from the shell input line
+      shellManager.write('\x15'); // Ctrl+U: kill line
     } else {
       logger.warn(`Warning cancel received for unknown warningId: ${payload.warningId}`);
     }
@@ -265,7 +304,11 @@ export function registerAllHandlers(deps: IpcDependencies): void {
   ipcMain.handle(IPC_CHANNELS.ANIMATION_LOAD_THEME, async (_event, payload: { themeName: string }) => {
     logger.debug(`IPC: ${IPC_CHANNELS.ANIMATION_LOAD_THEME} handled`);
 
-    const themeName = payload.themeName;
+    // Sanitize theme name to prevent path traversal
+    let themeName = path.basename(payload.themeName);
+    if (!themeName || themeName === '.' || themeName === '..') {
+      themeName = 'default';
+    }
     let themeDir = path.join(__dirname, '../../assets/animations', themeName);
 
     // Check if the theme directory exists

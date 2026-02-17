@@ -75,10 +75,10 @@ export const CURRENT_CONFIG_VERSION = 1;
 export const IPC_TIMEOUT_MS = 10000;
 
 /** Default window width */
-export const DEFAULT_WINDOW_WIDTH = 1200;
+export const DEFAULT_WINDOW_WIDTH = 1400;
 
 /** Default window height */
-export const DEFAULT_WINDOW_HEIGHT = 800;
+export const DEFAULT_WINDOW_HEIGHT = 950;
 
 // ============================================================
 // Default Configuration
@@ -104,9 +104,9 @@ export const DEFAULT_CONFIG: AppConfig = {
     customRules: [],
   },
   ui: {
-    commandPanelWidth: 220,
-    animationAreaHeight: 220,
-    explanationPanelHeight: 60,
+    commandPanelWidth: 200,
+    animationAreaHeight: 420,
+    explanationPanelHeight: 48,
     terminalFontSize: 14,
     terminalFontFamily: 'monospace',
     terminalTheme: {

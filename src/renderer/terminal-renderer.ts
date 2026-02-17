@@ -25,6 +25,9 @@ let fitAddon: FitAddon | null = null;
 let resizeObserver: ResizeObserver | null = null;
 let containerElement: HTMLElement | null = null;
 
+/** Debounce flag to prevent rapid shell restarts */
+let restartInProgress = false;
+
 /**
  * Default terminal theme (Catppuccin Mocha).
  * Used if config is not yet available at init time.
@@ -262,7 +265,9 @@ export function dispose(): void {
  */
 function restartShell(): void {
   if (!terminal) return;
+  if (restartInProgress) return; // Prevent rapid restart loops
 
+  restartInProgress = true;
   logger.info('Restarting shell process');
 
   // Clear the terminal
@@ -278,7 +283,17 @@ function restartShell(): void {
   } catch (err) {
     logger.error('Failed to restart shell', { error: String(err) });
     if (terminal) {
-      terminal.write('\r\n\x1b[31m[Failed to restart shell. Please restart the application.]\x1b[0m\r\n');
+      terminal.write('\r\n\x1b[31m[Failed to restart shell. Press Enter to try again.]\x1b[0m\r\n');
+      // Give the user another chance to retry
+      const retryDisposable = terminal.onData((retryData: string) => {
+        if (retryData === '\r' || retryData === '\n') {
+          retryDisposable.dispose();
+          restartShell();
+        }
+      });
     }
+  } finally {
+    // Allow restart again after a short cooldown
+    setTimeout(() => { restartInProgress = false; }, 1000);
   }
 }

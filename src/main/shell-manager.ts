@@ -44,6 +44,11 @@ export class ShellManager {
       this.kill();
     }
 
+    // Clear previously registered callbacks to prevent accumulation
+    // across respawns. Callers re-register on each shell:spawn event.
+    this.dataCallbacks = [];
+    this.exitCallbacks = [];
+
     this.currentCwd = cwd;
     this.killedByUser = false;
 
@@ -154,6 +159,13 @@ export class ShellManager {
    */
   onExit(callback: (exitCode: number, signal?: number) => void): void {
     this.exitCallbacks.push(callback);
+  }
+
+  /**
+   * Check whether the shell process is currently running.
+   */
+  isAlive(): boolean {
+    return this.ptyProcess !== null;
   }
 
   /**
