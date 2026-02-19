@@ -5,15 +5,27 @@ import { MakerDeb } from '@electron-forge/maker-deb';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import path from 'path';
+import fs from 'fs-extra';
 
 const config: ForgeConfig = {
   packagerConfig: {
     icon: path.resolve(__dirname, 'assets', 'icon'),
+    extraResource: [
+      path.resolve(__dirname, 'assets', 'animations'),
+    ],
     asar: {
       unpack: '**/node_modules/node-pty/**',
     },
   },
   rebuildConfig: {},
+  hooks: {
+    packageAfterCopy: async (_config, buildPath) => {
+      // Copy node-pty into the packaged app since Vite externalizes it
+      const src = path.resolve(__dirname, 'node_modules', 'node-pty');
+      const dest = path.resolve(buildPath, 'node_modules', 'node-pty');
+      await fs.copy(src, dest);
+    },
+  },
   makers: [
     new MakerSquirrel({
       iconUrl: 'https://raw.githubusercontent.com/swosu/House_Aaron/main/assets/icon.ico',

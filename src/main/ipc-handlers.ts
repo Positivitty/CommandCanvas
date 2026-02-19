@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { app, ipcMain, BrowserWindow } from 'electron';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
@@ -309,14 +309,17 @@ export function registerAllHandlers(deps: IpcDependencies): void {
     if (!themeName || themeName === '.' || themeName === '..') {
       themeName = 'default';
     }
-    let themeDir = path.join(__dirname, '../../assets/animations', themeName);
+    const animationsBase = app.isPackaged
+      ? path.join(process.resourcesPath, 'animations')
+      : path.join(__dirname, '../../assets/animations');
+    let themeDir = path.join(animationsBase, themeName);
 
     // Check if the theme directory exists
     try {
       await fs.access(themeDir);
     } catch {
       logger.warn(`Animation theme '${themeName}' not found, falling back to 'default'`);
-      themeDir = path.join(__dirname, '../../assets/animations', 'default');
+      themeDir = path.join(animationsBase, 'default');
 
       try {
         await fs.access(themeDir);
@@ -354,7 +357,9 @@ export function registerAllHandlers(deps: IpcDependencies): void {
   ipcMain.handle(IPC_CHANNELS.ANIMATION_GET_THEMES, async () => {
     logger.debug(`IPC: ${IPC_CHANNELS.ANIMATION_GET_THEMES} handled`);
 
-    const animationsDir = path.join(__dirname, '../../assets/animations');
+    const animationsDir = app.isPackaged
+      ? path.join(process.resourcesPath, 'animations')
+      : path.join(__dirname, '../../assets/animations');
 
     try {
       const entries = await fs.readdir(animationsDir, { withFileTypes: true });

@@ -165,7 +165,8 @@ async function initialize(): Promise<void> {
   if (commandPanelEl) {
     try {
       commandPanel.init(commandPanelEl);
-      commandPanel.setVisibleCategories([...projectTypes, 'custom']);
+      const alwaysVisible = ['git', 'node'];
+      commandPanel.setVisibleCategories([...new Set([...alwaysVisible, ...projectTypes, 'custom'])]);
       logger.info('Command panel initialized');
     } catch (err) {
       logger.warn('Command panel initialization failed', { error: String(err) });
