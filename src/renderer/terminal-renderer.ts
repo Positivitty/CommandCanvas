@@ -24,6 +24,14 @@ let terminal: Terminal | null = null;
 let fitAddon: FitAddon | null = null;
 let resizeObserver: ResizeObserver | null = null;
 let containerElement: HTMLElement | null = null;
+let unsubscribeShellData: (() => void) | null = null;
+let unsubscribeShellExit: (() => void) | null = null;
+let unsubscribeCommandSelected: (() => void) | null = null;
+let shellListenerGeneration = 0;
+let shellDataEventCount = 0;
+let rapidDuplicateShellChunkCount = 0;
+let lastShellChunk = '';
+let lastShellChunkAtMs = 0;
 
 /** Debounce flag to prevent rapid shell restarts */
 let restartInProgress = false;
@@ -67,6 +75,8 @@ export function init(container: HTMLElement): void {
   }
 
   containerElement = container;
+  const listenerGeneration = ++shellListenerGeneration;
+  logger.debug('Binding terminal shell listeners', { listenerGeneration });
 
   // Create xterm.js terminal instance
   terminal = new Terminal({
@@ -103,15 +113,59 @@ export function init(container: HTMLElement): void {
     }
   });
 
+  if (unsubscribeShellData) {
+    unsubscribeShellData();
+    unsubscribeShellData = null;
+  }
+
+  if (unsubscribeShellExit) {
+    unsubscribeShellExit();
+    unsubscribeShellExit = null;
+  }
+
   // Pipe shell output from the shell process to xterm
-  window.api.shell.onData((data: string) => {
+  unsubscribeShellData = window.api.shell.onData((data: string) => {
+    shellDataEventCount += 1;
+    const now = Date.now();
+    if (data === lastShellChunk && now - lastShellChunkAtMs <= 50) {
+      rapidDuplicateShellChunkCount += 1;
+      logger.warn('Potential duplicate shell data detected', {
+        listenerGeneration,
+        activeGeneration: shellListenerGeneration,
+        rapidDuplicateShellChunkCount,
+        dataLength: data.length,
+        preview: data.slice(0, 120),
+      });
+    }
+    lastShellChunk = data;
+    lastShellChunkAtMs = now;
+
+    if (listenerGeneration !== shellListenerGeneration) {
+      logger.warn('Stale shell data listener received payload', {
+        listenerGeneration,
+        activeGeneration: shellListenerGeneration,
+        shellDataEventCount,
+      });
+    } else if (shellDataEventCount % 200 === 0) {
+      logger.debug('Shell data event counter', {
+        shellDataEventCount,
+        rapidDuplicateShellChunkCount,
+        listenerGeneration,
+      });
+    }
+
     if (terminal) {
       terminal.write(data);
     }
   });
 
   // Handle shell exit events
-  window.api.shell.onExit((exitCode: number) => {
+  unsubscribeShellExit = window.api.shell.onExit((exitCode: number) => {
+    logger.debug('Shell exit callback invoked', {
+      listenerGeneration,
+      activeGeneration: shellListenerGeneration,
+      exitCode,
+    });
     logger.info('Shell process exited', { exitCode });
     eventBus.emit('shell:exit', { exitCode });
 
@@ -134,7 +188,7 @@ export function init(container: HTMLElement): void {
   });
 
   // Listen for command:selected events to insert commands
-  eventBus.on('command:selected', (payload: { command: string; explanation: string; id: string }) => {
+  unsubscribeCommandSelected = eventBus.on('command:selected', (payload: { command: string; explanation: string; id: string }) => {
     insertCommand(payload.command);
     eventBus.emit('command:inserted', { command: payload.command });
   });
@@ -243,6 +297,23 @@ export function getDimensions(): { cols: number; rows: number } | null {
  * Clean up terminal resources.
  */
 export function dispose(): void {
+  shellListenerGeneration += 1;
+
+  if (unsubscribeShellData) {
+    unsubscribeShellData();
+    unsubscribeShellData = null;
+  }
+
+  if (unsubscribeShellExit) {
+    unsubscribeShellExit();
+    unsubscribeShellExit = null;
+  }
+
+  if (unsubscribeCommandSelected) {
+    unsubscribeCommandSelected();
+    unsubscribeCommandSelected = null;
+  }
+
   if (resizeObserver) {
     resizeObserver.disconnect();
     resizeObserver = null;
