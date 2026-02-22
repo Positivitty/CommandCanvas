@@ -1,17 +1,109 @@
 /**
  * Oblivion Engine - Animation Area Styles
  *
- * Hero section for ASCII art — the visual centerpiece.
- * Uses radial gradient background, subtle glow effects,
- * and state-based color transitions for a cinematic feel.
+ * Cinematic hero section for the black hole ASCII art.
+ * Features:
+ *   - Breathing glow keyframe animation (slow, atmospheric pulse)
+ *   - State-based color transitions (idle/running/success/error)
+ *   - Radial gradient background with vignette overlay
+ *   - GPU-accelerated text-shadow for smooth performance
  */
+
+/* ============================================================
+   Breathing Glow Keyframes
+   ============================================================ */
+
+@keyframes breathe-idle {
+  0%, 100% {
+    text-shadow:
+      0 0 8px rgba(137, 180, 250, 0.06),
+      0 0 20px rgba(137, 180, 250, 0.02);
+    opacity: 0.92;
+  }
+  50% {
+    text-shadow:
+      0 0 14px rgba(137, 180, 250, 0.12),
+      0 0 35px rgba(137, 180, 250, 0.04);
+    opacity: 1;
+  }
+}
+
+@keyframes breathe-running {
+  0%, 100% {
+    text-shadow:
+      0 0 10px rgba(137, 180, 250, 0.10),
+      0 0 25px rgba(137, 180, 250, 0.04);
+    opacity: 0.95;
+  }
+  50% {
+    text-shadow:
+      0 0 18px rgba(137, 180, 250, 0.18),
+      0 0 40px rgba(137, 180, 250, 0.06);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-success {
+  0% {
+    text-shadow:
+      0 0 10px rgba(166, 227, 161, 0.15),
+      0 0 30px rgba(166, 227, 161, 0.05);
+  }
+  40% {
+    text-shadow:
+      0 0 25px rgba(166, 227, 161, 0.35),
+      0 0 60px rgba(166, 227, 161, 0.12),
+      0 0 100px rgba(166, 227, 161, 0.04);
+  }
+  100% {
+    text-shadow:
+      0 0 12px rgba(166, 227, 161, 0.10),
+      0 0 30px rgba(166, 227, 161, 0.03);
+  }
+}
+
+@keyframes pulse-error {
+  0%, 100% {
+    text-shadow:
+      0 0 8px rgba(243, 139, 168, 0.12),
+      0 0 20px rgba(243, 139, 168, 0.04);
+  }
+  25% {
+    text-shadow:
+      0 0 20px rgba(243, 139, 168, 0.30),
+      0 0 50px rgba(243, 139, 168, 0.10);
+  }
+  50% {
+    text-shadow:
+      0 0 6px rgba(243, 139, 168, 0.06),
+      0 0 15px rgba(243, 139, 168, 0.02);
+  }
+  75% {
+    text-shadow:
+      0 0 22px rgba(243, 139, 168, 0.28),
+      0 0 55px rgba(243, 139, 168, 0.08);
+  }
+}
+
+@keyframes bg-breathe {
+  0%, 100% {
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(137, 180, 250, 0.02) 0%, transparent 60%),
+      var(--color-crust);
+  }
+  50% {
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(137, 180, 250, 0.05) 0%, transparent 70%),
+      var(--color-crust);
+  }
+}
 
 /* ============================================================
    Animation Area Container — Cosmic Hero
    ============================================================ */
 
 #animation-area {
-  font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+  font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
   font-size: 10px;
   line-height: 1.1;
   letter-spacing: 0.3px;
@@ -25,20 +117,21 @@
   overflow: hidden;
   user-select: none;
   position: relative;
-  transition: opacity var(--transition-slow);
+  transition: background 0.8s ease;
+  animation: bg-breathe 6s ease-in-out infinite;
 }
 
-/* Subtle top vignette */
+/* Vignette overlay — darkens edges for cinematic depth */
 #animation-area::before {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(17, 17, 27, 0.4) 0%,
-    transparent 20%,
-    transparent 80%,
-    rgba(17, 17, 27, 0.6) 100%
+    rgba(17, 17, 27, 0.5) 0%,
+    transparent 15%,
+    transparent 85%,
+    rgba(17, 17, 27, 0.7) 100%
   );
   pointer-events: none;
   z-index: 1;
@@ -59,53 +152,65 @@
   line-height: inherit;
   letter-spacing: inherit;
   text-align: center;
-  color: var(--color-subtext0);
-  transition: color 0.4s ease, opacity var(--transition-normal), text-shadow 0.4s ease;
+  color: var(--color-overlay1);
+  transition: color 0.6s ease;
   opacity: 1;
   position: relative;
   z-index: 2;
-  text-shadow: 0 0 8px rgba(137, 180, 250, 0.05);
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.06);
   padding: var(--spacing-lg) 0;
+  /* GPU acceleration for smooth animation */
+  will-change: text-shadow, opacity;
 }
 
 /* ============================================================
-   Animation State Colors with Glow
+   State: Idle — Slow breathing glow
    ============================================================ */
 
 #animation-area.animation-state-idle .animation-frame {
   color: var(--color-overlay1);
-  text-shadow: 0 0 12px rgba(137, 180, 250, 0.06);
-}
-
-#animation-area.animation-state-running .animation-frame {
-  color: var(--color-subtext1);
-  text-shadow: 0 0 15px rgba(137, 180, 250, 0.1);
-}
-
-#animation-area.animation-state-success .animation-frame {
-  color: var(--color-green);
-  text-shadow: 0 0 20px rgba(166, 227, 161, 0.2);
-}
-
-#animation-area.animation-state-error .animation-frame {
-  color: var(--color-red);
-  text-shadow: 0 0 20px rgba(243, 139, 168, 0.2);
+  animation: breathe-idle 4s ease-in-out infinite;
 }
 
 /* ============================================================
-   State-based Background Shifts
+   State: Running — Slightly brighter breathing
    ============================================================ */
+
+#animation-area.animation-state-running .animation-frame {
+  color: var(--color-subtext1);
+  animation: breathe-running 3s ease-in-out infinite;
+}
+
+/* ============================================================
+   State: Success — Green pulse burst
+   ============================================================ */
+
+#animation-area.animation-state-success .animation-frame {
+  color: var(--color-green);
+  animation: pulse-success 2s ease-out forwards;
+}
 
 #animation-area.animation-state-success {
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(166, 227, 161, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, rgba(166, 227, 161, 0.06) 0%, transparent 55%),
     var(--color-crust);
+  animation: none;
+}
+
+/* ============================================================
+   State: Error — Red flicker
+   ============================================================ */
+
+#animation-area.animation-state-error .animation-frame {
+  color: var(--color-red);
+  animation: pulse-error 0.8s ease-in-out infinite;
 }
 
 #animation-area.animation-state-error {
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(243, 139, 168, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, rgba(243, 139, 168, 0.06) 0%, transparent 55%),
     var(--color-crust);
+  animation: none;
 }
 
 /* ============================================================
