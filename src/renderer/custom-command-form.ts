@@ -153,6 +153,9 @@ function buildModal(): void {
 
   modalEl.appendChild(buttonRow);
   containerEl.appendChild(modalEl);
+
+  // Add accessibility features
+  addAccessibilityFeatures();
 }
 
 /**
@@ -425,4 +428,35 @@ async function handleSave(): Promise<void> {
 function handleCancel(): void {
   hideModal();
   eventBus.emit('custom-command:close-form');
+}
+
+// Add event listener to constrain tab navigation and handle Escape key
+function addAccessibilityFeatures(): void {
+  if (!modalEl) return;
+
+  const focusableElements = modalEl.querySelectorAll<HTMLElement>(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  modalEl.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      handleCancel();
+    } else if (event.key === 'Tab') {
+      if (event.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement.focus();
+        }
+      }
+    }
+  });
 }
