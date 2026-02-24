@@ -1,6 +1,55 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
 
+type ShellDataCallback = (data: string) => void;
+type ShellExitCallback = (exitCode: number) => void;
+
+const shellDataCallbacks = new Set<ShellDataCallback>();
+const shellExitCallbacks = new Set<ShellExitCallback>();
+
+let shellDataForwarderRegistered = false;
+let shellExitForwarderRegistered = false;
+
+const shellDataForwarder = (_event: unknown, payload: { data: string }) => {
+  for (const callback of shellDataCallbacks) {
+    callback(payload.data);
+  }
+};
+
+const shellExitForwarder = (_event: unknown, payload: { exitCode: number }) => {
+  for (const callback of shellExitCallbacks) {
+    callback(payload.exitCode);
+  }
+};
+
+function ensureShellDataForwarder(): void {
+  if (!shellDataForwarderRegistered) {
+    ipcRenderer.on(IPC_CHANNELS.SHELL_DATA, shellDataForwarder);
+    shellDataForwarderRegistered = true;
+  }
+}
+
+function maybeDetachShellDataForwarder(): void {
+  if (shellDataForwarderRegistered && shellDataCallbacks.size === 0) {
+    ipcRenderer.removeListener(IPC_CHANNELS.SHELL_DATA, shellDataForwarder);
+    shellDataForwarderRegistered = false;
+  }
+}
+
+function ensureShellExitForwarder(): void {
+  if (!shellExitForwarderRegistered) {
+    ipcRenderer.on(IPC_CHANNELS.SHELL_EXIT, shellExitForwarder);
+    shellExitForwarderRegistered = true;
+  }
+}
+
+function maybeDetachShellExitForwarder(): void {
+  if (shellExitForwarderRegistered && shellExitCallbacks.size === 0) {
+    ipcRenderer.removeListener(IPC_CHANNELS.SHELL_EXIT, shellExitForwarder);
+    shellExitForwarderRegistered = false;
+  }
+}
+
 /**
  * Preload script: Exposes a typed, minimal, safe API to the renderer process
  * via contextBridge.exposeInMainWorld('api', {...}).
@@ -64,20 +113,26 @@ contextBridge.exposeInMainWorld('api', {
      * Register a callback to receive shell output data.
      * The Electron event object is stripped; only the data string is passed.
      */
-    onData: (callback: (data: string) => void): void => {
-      ipcRenderer.on(IPC_CHANNELS.SHELL_DATA, (_event, payload: { data: string }) => {
-        callback(payload.data);
-      });
+    onData: (callback: (data: string) => void): (() => void) => {
+      shellDataCallbacks.add(callback);
+      ensureShellDataForwarder();
+      return () => {
+        shellDataCallbacks.delete(callback);
+        maybeDetachShellDataForwarder();
+      };
     },
 
     /**
      * Register a callback to be notified when the shell process exits.
      * The Electron event object is stripped.
      */
-    onExit: (callback: (exitCode: number) => void): void => {
-      ipcRenderer.on(IPC_CHANNELS.SHELL_EXIT, (_event, payload: { exitCode: number }) => {
-        callback(payload.exitCode);
-      });
+    onExit: (callback: (exitCode: number) => void): (() => void) => {
+      shellExitCallbacks.add(callback);
+      ensureShellExitForwarder();
+      return () => {
+        shellExitCallbacks.delete(callback);
+        maybeDetachShellExitForwarder();
+      };
     },
   },
 
