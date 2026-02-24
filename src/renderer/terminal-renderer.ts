@@ -190,6 +190,7 @@ export function init(container: HTMLElement): void {
   // Listen for command:selected events to insert commands
   unsubscribeCommandSelected = eventBus.on('command:selected', (payload: { command: string; explanation: string; id: string }) => {
     insertCommand(payload.command);
+    focus();
     eventBus.emit('command:inserted', { command: payload.command });
   });
 

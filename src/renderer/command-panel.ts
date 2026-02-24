@@ -207,8 +207,9 @@ function renderCommands(): void {
     button.textContent = cmd.name;
     button.dataset.commandId = cmd.id;
 
-    // Click: emit command:selected
+    // Click: emit command:selected, then blur so Enter doesn't re-trigger
     button.addEventListener('click', () => {
+      button.blur();
       eventBus.emit('command:selected', {
         command: cmd.command,
         explanation: cmd.explanation,
