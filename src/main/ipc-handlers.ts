@@ -102,9 +102,22 @@ export function registerAllHandlers(deps: IpcDependencies): void {
       return;
     }
 
+    // Batch consecutive regular characters into a single shell write
+    // to avoid issues with rapid single-char writes on Windows conpty
+    let regularBatch = '';
+
+    /** Flush any accumulated regular characters to the shell */
+    const flushBatch = () => {
+      if (regularBatch.length > 0) {
+        shellManager.write(regularBatch);
+        regularBatch = '';
+      }
+    };
+
     for (const char of data) {
       // Detect start of escape sequence (e.g. arrow keys, Home, End)
       if (char === '\x1b') {
+        flushBatch();
         inEscapeSequence = true;
         shellManager.write(char);
         continue;
@@ -122,6 +135,7 @@ export function registerAllHandlers(deps: IpcDependencies): void {
 
       // Handle backspace: remove last character from line buffer
       if (char === '\x7f' || char === '\b') {
+        flushBatch();
         lineBuffer = lineBuffer.slice(0, -1);
         shellManager.write(char);
         continue;
@@ -130,6 +144,7 @@ export function registerAllHandlers(deps: IpcDependencies): void {
       // Handle control characters (Ctrl+C = \x03, Ctrl+D = \x04, etc.)
       // These clear the line buffer and are forwarded immediately
       if (char.charCodeAt(0) < 0x20 && char !== '\r' && char !== '\n') {
+        flushBatch();
         lineBuffer = '';
         shellManager.write(char);
         continue;
@@ -137,6 +152,8 @@ export function registerAllHandlers(deps: IpcDependencies): void {
 
       // Handle Enter (carriage return or newline from paste)
       if (char === '\r' || char === '\n') {
+        flushBatch();
+
         // Extract the accumulated command from the line buffer
         const command = lineBuffer.trim();
         logger.debug(`IPC: ${IPC_CHANNELS.SHELL_WRITE} detected Enter, line buffer: [${command.length} chars]`);
@@ -183,12 +200,15 @@ export function registerAllHandlers(deps: IpcDependencies): void {
         continue;
       }
 
-      // Regular character - append to line buffer and forward to shell
+      // Regular character - append to line buffer and batch for shell write
       if (lineBuffer.length < MAX_LINE_BUFFER_LENGTH) {
         lineBuffer += char;
       }
-      shellManager.write(char);
+      regularBatch += char;
     }
+
+    // Flush any remaining regular characters
+    flushBatch();
   });
 
   // shell:resize - Terminal viewport changed

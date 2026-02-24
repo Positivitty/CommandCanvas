@@ -1,170 +1,232 @@
 # Oblivion Engine
 
-A visual terminal application built with Electron that combines a real terminal emulator with clickable command panels, ASCII animations, and a built-in warning system for dangerous commands.
+A visual terminal application built with Electron. It combines a real terminal emulator with clickable command panels, ASCII animations, and a warning system for dangerous commands.
 
-## What It Does
+## Quick Start
 
-- **Command Panels** - Clickable buttons for common Git, Node.js, Python, and Docker commands so you don't have to memorize them
-- **Live Terminal** - Full terminal emulator (xterm.js + node-pty) running your actual shell
-- **Explanation Panel** - Hover over or click a command to see what it does before running it
-- **ASCII Animations** - Animated visuals that react to command success/failure states
-- **Warning System** - Catches dangerous commands (like `rm -rf`) and shows a confirmation overlay with risk level
-- **Custom Commands** - Add your own commands through the built-in form
+```bash
+git clone https://github.com/swosu/House_Aaron.git OblivionEngine
+cd OblivionEngine
+npm install
+npm start
+```
 
-## Prerequisites
+If that worked and you see the app, you're good to go. If not, read on.
 
-Before cloning, make sure you have the following installed:
+---
 
-| Tool | Minimum Version | Check With |
-|------|----------------|------------|
-| **Node.js** | v18+ | `node -v` |
-| **npm** | v9+ | `npm -v` |
-| **Git** | any | `git --version` |
+## Setup Guide (Step by Step)
 
-### macOS
+### Step 1: Install Node.js
 
-You need Xcode Command Line Tools for compiling the native `node-pty` module:
+You need **Node.js v18 or higher**. Check if you already have it:
 
+```bash
+node -v
+npm -v
+```
+
+If those commands don't work or show a version below 18, download and install Node.js from https://nodejs.org (use the **LTS** version).
+
+### Step 2: Install Build Tools
+
+This project uses `node-pty`, a native C++ module that has to be compiled on your machine. This is the step that causes the most issues.
+
+**macOS:**
 ```bash
 xcode-select --install
 ```
+A popup will appear. Click "Install" and wait for it to finish.
 
-### Windows
+**Windows:**
+1. Download [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+2. Run the installer
+3. Check the box for **"Desktop development with C++"**
+4. Click Install and wait for it to finish
+5. **Restart your terminal/PowerShell after installing**
 
-You need a C++ build toolchain for compiling the native `node-pty` module:
+If you already have Visual Studio 2019+ with the C++ workload, skip this.
 
-1. Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-2. During installation, select the **"Desktop development with C++"** workload
-3. Restart your terminal after installation
-
-If you already have Visual Studio 2019 or newer with the C++ workload, you're all set.
-
-### Linux (Debian/Ubuntu)
-
+**Linux (Ubuntu/Debian):**
 ```bash
 sudo apt install build-essential python3
 ```
 
-## Getting Started
-
-### 1. Clone the repository
+### Step 3: Clone and Install
 
 ```bash
-git clone https://github.com/Positivitty/OblivionEngine.git
+git clone https://github.com/swosu/House_Aaron.git OblivionEngine
 cd OblivionEngine
-```
-
-### 2. Install dependencies
-
-```bash
 npm install
 ```
 
-This will also run `electron-rebuild` automatically (via the `postinstall` script) to compile `node-pty` for your version of Electron.
+The install will take a minute. At the end it automatically runs `electron-rebuild` to compile `node-pty` for Electron. You should see output ending with something like `Rebuild Complete`.
 
-> **If `npm install` fails** with errors about `node-pty` or native modules, try:
-> ```bash
-> npm cache clean --force
-> rm -rf node_modules package-lock.json
-> npm install
-> ```
-
-### 3. Run the app
+### Step 4: Run It
 
 ```bash
 npm start
 ```
 
-This launches the Electron app in development mode with DevTools open.
+The app window should open with DevTools on the side. You'll see the terminal, command buttons, and the animation panel.
 
-## Project Structure
+---
 
+## Common Problems
+
+### `npm install` fails with node-pty or node-gyp errors
+
+This is the most common issue. It means the C++ build tools aren't set up right. When you run `npm install`, a prerequisite checker will run first and tell you exactly what's missing. If you see a red error from the checker, follow its instructions.
+
+**Windows (most common):**
+
+You need **all three** of these installed:
+1. **Node.js v18+** — download from https://nodejs.org (LTS version)
+2. **Python 3** — download from https://www.python.org/downloads/
+   - **Check "Add Python to PATH"** during installation
+3. **Visual Studio Build Tools** with C++ support:
+   - Download from https://visualstudio.microsoft.com/visual-cpp-build-tools/
+   - Run the installer and check **"Desktop development with C++"**
+   - Click Install and wait (this is a large download)
+   - **Restart your terminal after installing**
+
+After installing all three, do a clean install:
 ```
-OblivionEngine/
-├── src/
-│   ├── main/            # Electron main process
-│   │   ├── index.ts     # App entry point, window creation
-│   │   ├── shell-manager.ts    # PTY shell management
-│   │   ├── warning-engine.ts   # Dangerous command detection
-│   │   ├── config-manager.ts   # User config persistence
-│   │   ├── project-detector.ts # Auto-detect project type
-│   │   ├── ipc-handlers.ts     # Main ↔ Renderer communication
-│   │   ├── logger.ts           # File-based logging
-│   │   └── constants.ts        # Default config values
-│   ├── preload/         # Secure bridge between main & renderer
-│   │   └── index.ts
-│   ├── renderer/        # UI (runs in browser context)
-│   │   ├── index.ts            # Renderer entry, initialization
-│   │   ├── terminal-renderer.ts # xterm.js terminal
-│   │   ├── command-panel.ts    # Clickable command buttons
-│   │   ├── explanation-panel.ts # Command descriptions
-│   │   ├── animation-engine.ts # ASCII animation playback
-│   │   ├── warning-overlay.ts  # Danger confirmation modal
-│   │   ├── custom-command-form.ts # Add custom commands
-│   │   ├── event-bus.ts        # Internal event system
-│   │   ├── logger.ts           # Console logger
-│   │   └── styles/             # CSS stylesheets
-│   └── shared/          # Types & data shared across processes
-│       ├── types.ts            # All TypeScript interfaces
-│       ├── ipc-channels.ts     # IPC channel name constants
-│       └── default-commands.ts # Built-in command definitions
-├── assets/
-│   └── animations/      # ASCII animation frame files (JSON)
-│       ├── default/     # Default theme animations
-│       └── minimal/     # Minimal theme animations
-├── index.html           # Renderer HTML entry
-├── forge.config.ts      # Electron Forge build config
-├── vite.*.config.ts     # Vite build configs (main, preload, renderer)
-├── tsconfig*.json       # TypeScript configs
-└── package.json
+rmdir /s /q node_modules
+del package-lock.json
+npm cache clean --force
+npm install
 ```
 
-## Available Scripts
+> **Note:** If your project path has spaces (like `C:\Github Codes\...`), that can cause build failures. Try cloning to a path without spaces: `C:\OblivionEngine`
 
-| Command | What It Does |
-|---------|-------------|
-| `npm start` | Launch the app in development mode |
-| `npm run package` | Package the app for your OS (no installer) |
-| `npm run make` | Build a distributable installer for your OS |
+**macOS:**
+```bash
+xcode-select --install
+```
+If it says "already installed," try `sudo xcode-select --reset`, then delete `node_modules` and run `npm install` again.
 
-## Tech Stack
+**Linux:**
+```bash
+sudo apt install build-essential python3
+```
 
-- **Electron** - Desktop app framework
-- **TypeScript** - Type-safe JavaScript
-- **Vite** - Fast build tool
-- **Electron Forge** - Build, package, and distribute
-- **xterm.js** - Terminal emulator in the browser
-- **node-pty** - Native pseudo-terminal for real shell access
-- **Catppuccin Mocha** - Dark color theme
-
-## Troubleshooting
-
-### `npm install` fails with node-pty errors
-
-`node-pty` is a native module that needs to be compiled. Make sure you have the build tools for your OS installed (see Prerequisites above).
-
-> **Windows users:** If you see `node-gyp failed to rebuild` errors, make sure Visual Studio Build Tools are installed with the "Desktop development with C++" workload, then delete `node_modules` and run `npm install` again.
-
-### App launches but terminal is blank
-
-The shell might have failed to spawn. Check the DevTools console (automatically opens in dev mode) for error messages. Common causes:
-- Shell path not found - try setting a custom shell path in config
-- Permissions issue on macOS - make sure Terminal has disk access in System Settings > Privacy
-
-### `electron-rebuild` errors
-
-If the postinstall rebuild fails:
-
+**Last resort — rebuild manually:**
 ```bash
 npx electron-rebuild
 ```
 
-If that still fails, delete `node_modules` and reinstall:
+### App opens but the terminal is blank / no shell
 
+The shell process failed to start. Open DevTools (it should already be open) and check the Console tab for red errors.
+
+Common causes:
+- **macOS:** Your terminal needs Full Disk Access. Go to System Settings > Privacy & Security > Full Disk Access, and add your terminal app (Terminal.app, iTerm, etc.).
+- **Windows:** The app tries to use PowerShell by default. If PowerShell is blocked by your organization, this may fail.
+
+### App won't start at all / white screen
+
+The build might be broken. Try:
 ```bash
-rm -rf node_modules
+rm -rf node_modules .vite
 npm install
+npm start
 ```
+
+The `.vite` folder is the build cache. Deleting it forces a fresh build.
+
+### Changes I made aren't showing up
+
+Electron Forge uses Vite with hot reload, but some changes (especially in `src/main/`) require a full restart:
+
+1. Close the app window
+2. Go back to your terminal and press `Ctrl+C` to stop the process
+3. Run `npm start` again
+
+Changes to `src/renderer/` files usually hot-reload automatically.
+
+---
+
+## How the App Works
+
+The app has three processes that talk to each other:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Main Process (src/main/)                           │
+│  - Creates the app window                           │
+│  - Spawns the shell (node-pty)                      │
+│  - Detects dangerous commands                       │
+│  - Reads/writes config files                        │
+└──────────────────────┬──────────────────────────────┘
+                       │ IPC (inter-process communication)
+┌──────────────────────┴──────────────────────────────┐
+│  Preload (src/preload/)                             │
+│  - Secure bridge between main and renderer          │
+│  - Exposes only the APIs the UI is allowed to use   │
+└──────────────────────┬──────────────────────────────┘
+                       │
+┌──────────────────────┴──────────────────────────────┐
+│  Renderer (src/renderer/)                           │
+│  - Everything you see: terminal, buttons, animation │
+│  - Runs in a browser context (like a web page)      │
+└─────────────────────────────────────────────────────┘
+```
+
+### Key Files
+
+| File | What It Does |
+|------|-------------|
+| `src/main/index.ts` | App entry point — creates the window and wires everything up |
+| `src/main/shell-manager.ts` | Manages the shell process (spawning, writing input, resizing) |
+| `src/main/ipc-handlers.ts` | Handles messages between main and renderer |
+| `src/main/warning-engine.ts` | Checks if a command is dangerous before running it |
+| `src/renderer/terminal-renderer.ts` | The terminal display (xterm.js) |
+| `src/renderer/command-panel.ts` | The clickable command buttons |
+| `src/renderer/animation-engine.ts` | ASCII animation playback |
+| `src/renderer/warning-overlay.ts` | The danger confirmation popup |
+| `src/preload/index.ts` | Defines what APIs the renderer can access |
+
+### Project Structure
+
+```
+OblivionEngine/
+├── src/
+│   ├── main/            # Backend (Node.js) — shell, config, warnings
+│   ├── preload/         # Security bridge between backend and frontend
+│   ├── renderer/        # Frontend (browser) — UI, terminal, buttons
+│   │   └── styles/      # CSS files
+│   └── shared/          # Types and data used by both sides
+├── assets/
+│   └── animations/      # ASCII animation frames (JSON files)
+├── index.html           # HTML entry point for the renderer
+├── forge.config.ts      # Electron Forge build/packaging config
+├── vite.*.config.ts     # Vite configs for each process
+└── package.json
+```
+
+---
+
+## Scripts
+
+| Command | What It Does |
+|---------|-------------|
+| `npm start` | Run the app in dev mode (with hot reload and DevTools) |
+| `npm run package` | Build the app for your OS (output in `out/` folder) |
+| `npm run make` | Build a distributable installer (`.dmg`, `.exe`, `.deb`) |
+
+---
+
+## Tech Stack
+
+| Technology | Purpose |
+|-----------|---------|
+| Electron | Desktop app framework |
+| TypeScript | Type-safe JavaScript |
+| Vite | Fast build tool and dev server |
+| Electron Forge | Packaging and distribution |
+| xterm.js | Terminal emulator component |
+| node-pty | Native shell access (the part that needs C++ tools) |
 
 ## License
 
