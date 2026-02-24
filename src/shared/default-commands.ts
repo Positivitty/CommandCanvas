@@ -41,7 +41,7 @@ export const DEFAULT_COMMANDS: Record<string, CommandDefinition[]> = {
   ],
   python: [
     { id: 'py-venv',      name: 'Create Venv',    command: 'python -m venv venv',            explanation: 'Creates a virtual environment in a venv/ directory.',  category: 'python', order: 0 },
-    { id: 'py-activate',  name: 'Activate Venv',  command: 'source venv/bin/activate',        explanation: 'Activates the Python virtual environment.',            category: 'python', order: 1 },
+    { id: 'py-activate',  name: 'Activate Venv',  command: 'source venv/bin/activate',        explanation: 'Activates the Python virtual environment. On Windows, use: venv\\Scripts\\activate', category: 'python', order: 1 },
     { id: 'pip-install',  name: 'Pip Install',    command: 'pip install -r requirements.txt', explanation: 'Installs all dependencies from requirements.txt.',     category: 'python', order: 2 },
     { id: 'py-run',       name: 'Run',            command: 'python ',                         explanation: 'Runs a Python script.',                                category: 'python', order: 3 },
     { id: 'pip-freeze',   name: 'Freeze',         command: 'pip freeze > requirements.txt',   explanation: 'Writes installed packages to requirements.txt.',       category: 'python', order: 4 },

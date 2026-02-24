@@ -10,6 +10,7 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "echo \"No linter configured\"",
+    "preinstall": "node scripts/check-prerequisites.js",
     "postinstall": "electron-rebuild"
   },
   "keywords": [
